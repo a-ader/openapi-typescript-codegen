@@ -6,9 +6,7 @@
     },
     "host": "localhost:3000",
     "basePath": "/base",
-    "schemes": [
-        "http"
-    ],
+    "schemes": ["http"],
     "paths": {
         "/api/v{api-version}/simple": {
             "get": {

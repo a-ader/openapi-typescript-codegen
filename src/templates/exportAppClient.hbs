@@ -1,39 +1,39 @@
 {{>header}}
 
-import type { BaseHttpRequest } from './core';
-import { {{{httpClientRequest}}} } from './core';
-import type { ClientConfig } from './core';
+import { BaseHttpRequest } from './core/BaseHttpRequest';
+import type { OpenAPIConfig } from './core/OpenAPI';
+import { {{{httpClientRequest}}} } from './core/{{{httpClientRequest}}}';
 {{#if services}}
-import {
 {{#each services}}
-    {{{name}}},
+import { {{{name}}} } from './services/{{{name}}}';
 {{/each}}
-} from './services';
 {{/if}}
 {{#if service}}
-import { {{{service.name}}} } from './services';
+import { {{{service.name}}} } from './services/{{{service.name}}}';
 {{/if}}
 
 export class {{{clientName}}} {{#if service}}extends {{{service.name}}} {{/if}}{
 {{#each services}}
     readonly {{{shortName}}}: {{{name}}};
 {{/each}}
+    readonly request: BaseHttpRequest;
 
-    constructor(clientConfig: ClientConfig, httpClient: BaseHttpRequest = new {{{httpClientRequest}}}()) {
-        const config = {
-            baseUrl: clientConfig?.baseUrl ?? '{{{server}}}',
-            version: clientConfig?.version ?? '{{{version}}}',
-            withCredentials: clientConfig?.withCredentials ?? false,
-            token: clientConfig?.token,
-            username: clientConfig?.username,
-            password: clientConfig?.password,
-            headers: clientConfig?.headers,
-        }
+    constructor(openApiConfig?: OpenAPIConfig, HttpRequest: new (config: OpenAPIConfig) => BaseHttpRequest = {{{httpClientRequest}}}) {
+        {{#if service}}const request{{else}}this.request{{/if}} = new HttpRequest({
+            BASE: openApiConfig?.BASE ?? '{{{server}}}',
+            VERSION: openApiConfig?.VERSION ?? '{{{version}}}',
+            WITH_CREDENTIALS: openApiConfig?.WITH_CREDENTIALS ?? false,
+            TOKEN: openApiConfig?.TOKEN,
+            USERNAME: openApiConfig?.USERNAME,
+            PASSWORD: openApiConfig?.PASSWORD,
+            HEADERS: openApiConfig?.HEADERS,
+        });
         {{#if service}}
-        super(httpClient, config);
+        super(request);
+        this.request = request;
         {{/if}}
         {{#each services}}
-        this.{{{shortName}}} = new {{{name}}}(httpClient, config);
+        this.{{{shortName}}} = new {{{name}}}(this.request);
         {{/each}}
     }
 }
